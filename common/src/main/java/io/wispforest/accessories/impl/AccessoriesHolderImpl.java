@@ -279,6 +279,8 @@ public class AccessoriesHolderImpl implements AccessoriesHolder, InstanceEndec {
             LOGGER.warn("It seems the given player has no slots bound to it within a init call, is that desired?");
         }
 
+        this.validSlotContainers = null;
+
         if (loadedFromTag) {
             entitySlots.forEach((s, slotType) -> {
                 this.slotContainers.putIfAbsent(s, new AccessoriesContainerImpl(capability, slotType));
@@ -295,6 +297,8 @@ public class AccessoriesHolderImpl implements AccessoriesHolder, InstanceEndec {
                 this.slotContainers.put(s, new AccessoriesContainerImpl(capability, slotType));
             });
         }
+
+        this.setValidTypes(entitySlots.keySet());
     }
 
     // TODO: SPLIT DECODING AND VALIDATION SAFETY DOWN THE ROAD
