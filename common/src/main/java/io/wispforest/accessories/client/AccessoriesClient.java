@@ -140,6 +140,8 @@ public class AccessoriesClient {
 
     public static void init(){
         ClientLifecycleEvents.END_DATA_PACK_RELOAD.register((client, success) -> {
+            if (!success) return; // LOADING PROBLEM HAS OCCURRED SO THINGS WILL GO WRONG IF WE TRY DOING OUR STUFF
+
             AccessoriesRendererRegistry.onReload();
         });
 
