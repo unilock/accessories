@@ -74,38 +74,31 @@ public class AccessoriesForge {
 
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public static final AttachmentType<AccessoriesHolderImpl> HOLDER_ATTACHMENT_TYPE;
+    public static final AttachmentType<AccessoriesHolderImpl> HOLDER_ATTACHMENT_TYPE = AttachmentType.builder(AccessoriesHolderImpl::of)
+            .serialize(new IAttachmentSerializer<>() {
+                private final Endec<AccessoriesHolderImpl> ENDEC = InstanceEndec.constructed(AccessoriesHolderImpl::new);
+
+                @Override
+                public AccessoriesHolderImpl read(IAttachmentHolder holder, Tag tag, HolderLookup.Provider provider) {
+                    return ENDEC.decodeFully(
+                            SerializationContext.attributes(RegistriesAttribute.of((RegistryAccess) provider)),
+                            NbtDeserializer::of,
+                            tag);
+                }
+
+                @Override
+                @Nullable
+                public Tag write(AccessoriesHolderImpl object, HolderLookup.Provider provider) {
+                    return ENDEC.encodeFully(
+                            SerializationContext.attributes(RegistriesAttribute.of((RegistryAccess) provider)),
+                            NbtSerializer::of,
+                            object);
+                }
+            })
+            .copyOnDeath()
+            .build();
 
     public static final EntityCapability<AccessoriesCapability, Void> CAPABILITY = EntityCapability.createVoid(Accessories.of("capability"), AccessoriesCapability.class);
-
-    static {
-        HOLDER_ATTACHMENT_TYPE = Registry.register(
-                NeoForgeRegistries.ATTACHMENT_TYPES,
-                Accessories.of("inventory_holder"),
-                AttachmentType.builder(AccessoriesHolderImpl::of)
-                        .serialize(new IAttachmentSerializer<>() {
-                            private final Endec<AccessoriesHolderImpl> ENDEC = InstanceEndec.constructed(AccessoriesHolderImpl::new);
-
-                            @Override
-                            public AccessoriesHolderImpl read(IAttachmentHolder holder, Tag tag, HolderLookup.Provider provider) {
-                                return ENDEC.decodeFully(
-                                        SerializationContext.attributes(RegistriesAttribute.of((RegistryAccess) provider)),
-                                        NbtDeserializer::of,
-                                        tag);
-                            }
-
-                            @Override
-                            @Nullable
-                            public Tag write(AccessoriesHolderImpl object, HolderLookup.Provider provider) {
-                                return ENDEC.encodeFully(
-                                        SerializationContext.attributes(RegistriesAttribute.of((RegistryAccess) provider)),
-                                        NbtSerializer::of,
-                                        object);
-                            }
-                        })
-                        .copyOnDeath()
-                        .build());
-    }
 
     public static IEventBus BUS;
 
@@ -165,6 +158,7 @@ public class AccessoriesForge {
     }
 
     public void registerStuff(RegisterEvent event){
+        event.register(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, (helper) -> helper.register(Accessories.of("inventory_holder"), HOLDER_ATTACHMENT_TYPE));
         event.register(Registries.MENU, (helper) -> AccessoriesMenuTypes.registerMenuType());
         event.register(Registries.TRIGGER_TYPE, (helper) -> Accessories.registerCriteria());
         event.register(Registries.DATA_COMPONENT_TYPE, (helper) -> AccessoriesDataComponents.init());
